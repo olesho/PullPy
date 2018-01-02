@@ -16,7 +16,7 @@ with open('config.json') as config_file:
 	hostName = conf.get('Host')
 	hostPort = conf.get('Port')
 
-print("Will listen to", hostName+":"+hostPort)
+print("Will listen to", hostName+":"+str(hostPort))
 
 
 with open('repos.json') as data_file:
