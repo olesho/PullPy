@@ -8,21 +8,16 @@ import json
 from subprocess import call
 import os
 
-
-# eval not working yet
-'''
-import subprocess
-def c(command):
-    process = subprocess.Popen(command,stdout=subprocess.PIPE, shell=True)
-    proc_stdout = process.communicate()[0].strip()
-    print(proc_stdout)
-
-c('eval `ssh-agent -s`')
-c('ssh-add ~/.ssh/wellmux')
-'''
-
-hostName = "46.101.219.50"
+hostName = "localhost"
 hostPort = 5000
+
+with open('config.json') as config_file:
+	conf = json.load(config_file)
+	hostName = conf.get('Host')
+	hostPort = conf.get('Port')
+
+print("Will listen to", hostName+":"+hostPort)
+
 
 with open('repos.json') as data_file:
 	repos = json.load(data_file)
