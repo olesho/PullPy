@@ -37,7 +37,7 @@ def pull(path, repoName):
 	o = repo.remotes.origin
 	print('Origin:', repo.remotes.origin.url)
 	o.fetch()
-	repo.head.ref.set_tracking_branch(o.refs.master)
+	repo.head.ref.set_tracking_branch(o.refs.dev)
 	o.pull()
 	print('Done:', repoName)
 
@@ -63,8 +63,9 @@ class MyServer(BaseHTTPRequestHandler):
 
 		path = match_repo(name, code)	
 		if path:
+			print("pulling")
 			pull(path, name)
-
+'''
 	def do_GET(self):
                 self.send_response(200)
                 self.send_header("Content-type", "text/html")
@@ -80,7 +81,7 @@ class MyServer(BaseHTTPRequestHandler):
                 path = match_repo(name, code)
                 if path:
                         pull(path, name)
-
+'''
 myServer = HTTPServer((hostName, hostPort), MyServer)
 print(time.asctime(), "Server Starts - %s:%s" % (hostName, hostPort))
 
