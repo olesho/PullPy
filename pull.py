@@ -8,6 +8,7 @@ import json
 from subprocess import call
 import os
 
+#defaults
 hostName = "localhost"
 hostPort = 5000
 
@@ -23,37 +24,26 @@ with open('repos.json') as data_file:
 	repos = json.load(data_file)
 
 def match_repo(name, code):
-	print('Match?:', name, code)
 	for k, v in enumerate(repos):
 		if (name == v.get('name')) and (code == v.get('code')):
-			print('Success match:', name, code)
-			return v.get('path')
+			return v
 	return False
 
-def pull(path, repoName):
-	print(repoName, 'pull started')
-	print('Path:', path)
+def pull(path, repoName, branch):
 	repo = git.Repo(path)
 	o = repo.remotes.origin
-	print('Origin:', repo.remotes.origin.url)
 	o.fetch()
-	repo.head.ref.set_tracking_branch(o.refs.dev)
+	repo.head.ref.set_tracking_branch(o.refs[branch])
 	o.pull()
-	print('Done:', repoName)
+	print('Done:', repo.remotes.origin.url)
 
-for k, v in enumerate(repos):
-	if (v.get('enabled')):
-#		print(v.get('path'))
-#		print(v.get('name'))
-		pull(v.get('path'), v.get('name'))
+for k, repo in enumerate(repos):
+	if (repo.get('enabled')):
+		pull(repo.get('path'), repo.get('name'), repo.get('branch'))
 
 
-class MyServer(BaseHTTPRequestHandler):
+class PullServer(BaseHTTPRequestHandler):
 	def do_POST(self):
-		self.send_response(200)
-		self.send_header("Content-type", "text/html")
-		self.end_headers()
-
 		fields = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
 
 		codes = fields.get('code')
@@ -61,28 +51,27 @@ class MyServer(BaseHTTPRequestHandler):
 		names = fields.get('name')
 		name = names[0] if names else None
 
-		path = match_repo(name, code)	
-		if path:
-			print("pulling")
-			pull(path, name)
-'''
-	def do_GET(self):
-                self.send_response(200)
-                self.send_header("Content-type", "text/html")
-                self.end_headers()
+		repo = match_repo(name, code)
+		if repo:
+			if repo.get('enabled'):
+				path = repo.get('path')
+				name = repo.get('name')
+				branch = repo.get('branch')
+				print("Repo found. Path:", path, "Name:", name, "Branch:", branch)
 
-                fields = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+				self.send_response(200)
+				self.send_header("Content-type", "text/html")
+				self.end_headers()
+				self.wfile.write("Success".encode())
 
-                codes = fields.get('code')
-                code = codes[0] if codes else None
-                names = fields.get('name')
-                name = names[0] if names else None
+				pull(path, name, branch)
+		else:
+			print("No repo found")
 
-                path = match_repo(name, code)
-                if path:
-                        pull(path, name)
-'''
-myServer = HTTPServer((hostName, hostPort), MyServer)
+			self.send_response(404)
+			self.end_headers()
+
+myServer = HTTPServer((hostName, hostPort), PullServer)
 print(time.asctime(), "Server Starts - %s:%s" % (hostName, hostPort))
 
 try:

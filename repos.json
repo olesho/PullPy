@@ -1,8 +1,9 @@
 [
 	{
-		"name": "repo_name",
-		"code": "111111111111111",
-		"path": "/var/www/html",
-		"enabled": true
+		"name": "pull_repo",
+		"code": "1111",
+		"path": ".",
+		"enabled": true,
+		"branch": "master"
 	}
 ]
