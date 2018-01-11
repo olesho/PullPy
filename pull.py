@@ -24,10 +24,11 @@ with open('repos.json') as data_file:
 	repos = json.load(data_file)
 
 def match_repo(name, code):
+	res = []
 	for k, v in enumerate(repos):
-		if (name == v.get('name')) and (code == v.get('code')):
-			return v
-	return False
+		if (name == v.get('name')) and (code == v.get('code')) and (v.get('enabled')):
+			res.extend(v)
+	return res
 
 def pull(path, repoName, branch):
 	repo = git.Repo(path)
@@ -52,25 +53,23 @@ class PullServer(BaseHTTPRequestHandler):
 		names = fields.get('name')
 		name = names[0] if names else None
 
-		repo = match_repo(name, code)
-		if repo:
-			if repo.get('enabled'):
-				path = repo.get('path')
-				name = repo.get('name')
-				branch = repo.get('branch')
-				print("Repo found. Path:", path, "Name:", name, "Branch:", branch)
+		repos = match_repo(name, code)
+		
+                if len(repos) > 0:
+                        self.send_response(200)
+                        self.send_header("Content-type", "text/html")
+                        self.end_headers()
+                        self.wfile.write("Success".encode())
+                else:
+                        print("No repo found")
+                        self.send_response(404)
 
-				self.send_response(200)
-				self.send_header("Content-type", "text/html")
-				self.end_headers()
-				self.wfile.write("Success".encode())
-
-				pull(path, name, branch)
-		else:
-			print("No repo found")
-
-			self.send_response(404)
-			self.end_headers()
+		for repo in repos:
+			path = repo.get('path')
+			name = repo.get('name')
+			branch = repo.get('branch')
+			print("Repo found. Path:", path, "Name:", name, "Branch:", branch)
+			pull(path, name, branch)
 
 myServer = HTTPServer((hostName, hostPort), PullServer)
 print(time.asctime(), "Server Starts - %s:%s" % (hostName, hostPort))
