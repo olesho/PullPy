@@ -7,8 +7,10 @@ import git
 import json
 from subprocess import call
 import os
+import logging
 
 #defaults
+logging.basicConfig(filename='pull.log',level=logging.DEBUG)
 hostName = "localhost"
 hostPort = 5000
 
@@ -17,7 +19,7 @@ with open('config.json') as config_file:
 	hostName = conf.get('Host')
 	hostPort = conf.get('Port')
 
-print("Will listen to", hostName+":"+str(hostPort))
+logging.info("Will listen to", hostName+":"+str(hostPort))
 
 
 with open('repos.json') as data_file:
@@ -36,8 +38,8 @@ def pull(path, repoName, branch):
 	o.fetch()
 	repo.head.ref.set_tracking_branch(o.refs[branch])
 	res = o.pull()
-	print(res)
-	print('Done:', repo.remotes.origin.url)
+	logging.info(res)
+	logging.info('Done:', repo.remotes.origin.url)
 
 for k, repo in enumerate(repos):
 	if (repo.get('enabled')):
@@ -60,18 +62,18 @@ class PullServer(BaseHTTPRequestHandler):
 			self.end_headers()
 			self.wfile.write("Success".encode())
 		else:
-			print("No repo found")
+			logging.info("No repo found")
 			self.send_response(404)
 
 		for repo in repos:
 			path = repo.get('path')
 			name = repo.get('name')
 			branch = repo.get('branch')
-			print("Repo found. Path:", path, "Name:", name, "Branch:", branch)
+			logging.info("Repo found. Path:", path, "Name:", name, "Branch:", branch)
 			pull(path, name, branch)
 
 myServer = HTTPServer((hostName, hostPort), PullServer)
-print(time.asctime(), "Server Starts - %s:%s" % (hostName, hostPort))
+logging.info(time.asctime(), "Server Starts - %s:%s" % (hostName, hostPort))
 
 try:
 	myServer.serve_forever()
@@ -79,4 +81,4 @@ except KeyboardInterrupt:
 	pass
 
 myServer.server_close()
-print(time.asctime(), "Server Stops - %s:%s" % (hostName, hostPort))
+logging.info(time.asctime(), "Server Stops - %s:%s" % (hostName, hostPort))
