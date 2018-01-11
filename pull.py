@@ -54,15 +54,14 @@ class PullServer(BaseHTTPRequestHandler):
 		name = names[0] if names else None
 
 		repos = match_repo(name, code)
-		
-                if len(repos) > 0:
-                        self.send_response(200)
-                        self.send_header("Content-type", "text/html")
-                        self.end_headers()
-                        self.wfile.write("Success".encode())
-                else:
-                        print("No repo found")
-                        self.send_response(404)
+		if (len(repos) > 0):
+			self.send_response(200)
+			self.send_header("Content-type", "text/html")
+			self.end_headers()
+			self.wfile.write("Success".encode())
+		else:
+			print("No repo found")
+			self.send_response(404)
 
 		for repo in repos:
 			path = repo.get('path')
