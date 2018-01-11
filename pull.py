@@ -34,7 +34,8 @@ def pull(path, repoName, branch):
 	o = repo.remotes.origin
 	o.fetch()
 	repo.head.ref.set_tracking_branch(o.refs[branch])
-	o.pull()
+	res = o.pull()
+	print(res)
 	print('Done:', repo.remotes.origin.url)
 
 for k, repo in enumerate(repos):
