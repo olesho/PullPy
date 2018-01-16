@@ -8,6 +8,7 @@ import json
 from subprocess import call
 import os
 import logging
+import subprocess
 
 #defaults
 logging.basicConfig(filename='pull.log',level=logging.DEBUG)
@@ -19,7 +20,7 @@ with open('config.json') as config_file:
 	hostName = conf.get('Host')
 	hostPort = conf.get('Port')
 
-logging.info("Will listen to", hostName+":"+str(hostPort))
+logging.info("Will listen to "+hostName+":"+str(hostPort))
 
 
 with open('repos.json') as data_file:
@@ -29,10 +30,14 @@ def match_repo(name, code):
 	res = []
 	for k, v in enumerate(repos):
 		if (name == v.get('name')) and (code == v.get('code')) and (v.get('enabled')):
-			res.extend(v)
+			res.append(v)
+	print(res)
 	return res
 
-def pull(path, repoName, branch):
+def pull(path, repoName, branch, script):
+	if script:
+		subprocess.call([script])
+		return
 	repo = git.Repo(path)
 	o = repo.remotes.origin
 	o.fetch()
@@ -43,7 +48,7 @@ def pull(path, repoName, branch):
 
 for k, repo in enumerate(repos):
 	if (repo.get('enabled')):
-		pull(repo.get('path'), repo.get('name'), repo.get('branch'))
+		pull(repo.get('path'), repo.get('name'), repo.get('branch'), repo.get('script'))
 
 
 class PullServer(BaseHTTPRequestHandler):
@@ -69,11 +74,11 @@ class PullServer(BaseHTTPRequestHandler):
 			path = repo.get('path')
 			name = repo.get('name')
 			branch = repo.get('branch')
-			logging.info("Repo found. Path:", path, "Name:", name, "Branch:", branch)
-			pull(path, name, branch)
+			script = repo.get('script')
+			pull(path, name, branch, script)
 
 myServer = HTTPServer((hostName, hostPort), PullServer)
-logging.info(time.asctime(), "Server Starts - %s:%s" % (hostName, hostPort))
+logging.info(time.asctime() + " Server Starts - %s:%s" % (hostName, str(hostPort)))
 
 try:
 	myServer.serve_forever()
@@ -81,4 +86,4 @@ except KeyboardInterrupt:
 	pass
 
 myServer.server_close()
-logging.info(time.asctime(), "Server Stops - %s:%s" % (hostName, hostPort))
+logging.info(time.asctime() + "Server Stops - %s:%s" % (hostName, hostPort))
