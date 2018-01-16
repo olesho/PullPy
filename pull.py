@@ -44,7 +44,7 @@ def pull(path, repoName, branch, script):
 	repo.head.ref.set_tracking_branch(o.refs[branch])
 	res = o.pull()
 	logging.info(res)
-	logging.info('Done:', repo.remotes.origin.url)
+	logging.info('Done: '+repo.remotes.origin.url)
 
 for k, repo in enumerate(repos):
 	if (repo.get('enabled')):
