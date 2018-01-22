@@ -11,7 +11,7 @@ import logging
 import subprocess
 
 #defaults
-logging.basicConfig(filename='pull.log',level=logging.DEBUG)
+logging.basicConfig(filename='pull.log',level=logging.DEBUG,format='%(asctime)s %(message)s')
 hostName = "localhost"
 hostPort = 5000
 
@@ -31,12 +31,13 @@ def match_repo(name, code):
 	for k, v in enumerate(repos):
 		if (name == v.get('name')) and (code == v.get('code')) and (v.get('enabled')):
 			res.append(v)
-	print(res)
 	return res
 
 def pull(path, repoName, branch, script):
 	if script:
-		subprocess.call([script])
+		logging.info("Calling script: " + script)
+		output = subprocess.check_output([script], cwd=path, shell=True)
+		logging.info(output.decode('utf-8'))
 		return
 	repo = git.Repo(path)
 	o = repo.remotes.origin
@@ -61,6 +62,7 @@ class PullServer(BaseHTTPRequestHandler):
 		name = names[0] if names else None
 
 		repos = match_repo(name, code)
+		logging.info("Trying to find match: repo name - " + name + ", repo code " + code)
 		if (len(repos) > 0):
 			self.send_response(200)
 			self.send_header("Content-type", "text/html")
